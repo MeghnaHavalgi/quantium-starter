@@ -1,4 +1,5 @@
-
+from dash import Dash, html, dcc
+import plotly.express as px
 import pandas as pd
 
 def main():
@@ -29,7 +30,24 @@ def main():
     print(df2)
 
     df2.to_csv("C:\\Users\\Akshay bruh\\Desktop\\quantium-starter\\data\\final_csv.csv", encoding='utf-8', index=False)
+# #creating a dash layout
+    app = Dash(__name__)
+    fig = px.line(df2, x="date", y="sales")
+    app.layout = html.Div(children=[
+        html.H1(children='SoulFoods'),
+        html.Div(children='''Pink morsel sales over time.'''),
 
+        dcc.Graph(
+            id='example-graph',
+            figure=fig
+        )
+
+    ])
+
+
+    
+    app.run_server(debug=True)
 
 if __name__ == "__main__":
     main()
+    
