@@ -1,5 +1,6 @@
 import colorsys
 from dash import Dash, html, dcc, Input, Output
+from dash.exceptions import PreventUpdate
 import plotly.express as px
 import plotly.graph_objects as go
 import pandas as pd
@@ -83,24 +84,71 @@ def main():
         style={
             "font-size": "150%"
             }
-        )
+        ),
+    html.Div(id='input-output'),
+    html.Div(id='radio-items-output'),
+    html.Button('change-style', id='change-style'),
+    html.Div(
+        'Style changer',
+        id='style-output',
+        style={'backgroundColor': 'rgba(255, 0, 0, 1)'}
+    ),
+    html.Div(
+        id='multi-elements-click',
+        children=[
+            html.Button('btn-1', id='btn-1'),
+            html.Button('btn-2', id='btn-2'),
+            html.Button('btn-3', id='btn-3'),
+        ]
+    ),
+    html.Div(id='multi-elements-outputs'),
+    for i in (
+        'input',
+        'radio-items',
+        ):
+        @app.callback(
+             Output('{}-output'.format(i), 'children'), [Input(i, 'value')]
+             )
+        def _wrap(value):
+            if value is None:
+                raise PreventUpdate
+
+            return str(value)
+
+
+        @app.callback(
+            Output('style-output', 'style'), [Input('change-style', 'n_clicks')]
+            )
+        def on_style_change(n_clicks):
+            if n_clicks is None:
+                 raise PreventUpdate
+
+            return {'backgroundColor': 'rgba(0, 0, 255, 1)'}
+
+
+        @app.callback(
+            Output('multi-elements-outputs', 'children'),
+            [Input('btn-{}'.format(x), 'n_clicks') for x in range(1, 4)],
+            )
+        def on_multi_click(*args):
+             return [html.Span(x) for x in args if x]
 
 
 # define the region picker callback
-    @app.callback(
-        Output(visualization, "figure"),
-        Input(region_picker, "value")
-        )
-    def update_graph(region):
+        @app.callback(
+            Output(visualization, "figure"),
+            Input(region_picker, "value")
+            )
+        def update_graph(region):
     # filter the dataset
-        if region == "all":
-            trimmed_data = df2
-        else:
-            trimmed_data = df2[df2["region"] == region]
+            if region == "all":
+                trimmed_data = df2
+            else:
+                trimmed_data = df2[df2["region"] == region]
 
     # generate a new line chart with the filtered data
-        figure = generate_figure(trimmed_data)
-        return figure
+            figure = generate_figure(trimmed_data)
+            return figure
 
 
 # define the app layout
