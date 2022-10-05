@@ -32,89 +32,90 @@ def main():
     print(df2)
 
     df2.to_csv("C:\\Users\\Akshay bruh\\Desktop\\quantium-starter\\data\\final_csv.csv", encoding='utf-8', index=False)
+    df2 = df2.sort_values(by="date")
 # #creating a dash layout
     app = Dash(__name__)
 
     colors = {
-    'background': 'pink',
-    'text': '#7FDBFF'
+    "primary": "#FEDBFF",
+    "secondary": "#D598EB",
+    "font": "#522A61"
     }
 
-    # fig = px.line(df2, x="date", y="sales", color="region")
-
-    app.layout = html.Div(style={'backgroundColor': colors['background']}, children=[
-        html.H1(
-            children='SoulFoods',
-            style={
-              'textAlign': 'center',
-              'color': colors['text']
-              },
-        ),
-        html.Div(children='''Pink morsel sales over time.''',  style={
-            'textAlign': 'center',
-            'color': colors['text']
-        }),
-
-        html.Div([
-            html.Br(),
-            html.Label(['Region:'], style={'font-weight': 'bold'}),
-            dcc.RadioItems(
-                id='xradioitem',
-                options=[
-                    {'label': 'All', 'value':'All'},
-                    # {'label': 'north', 'value':'north'},
-                    # {'label': 'south', 'value':'south'},
-                    # {'label': 'east', 'value':'east'},
-                    # {'label': 'west', 'value':'west'},
-
-                ],
-                value = 'All',
-                style={"width":"50%"}
-
-            ),
-        ]),
-
-        html.Div([
-            html.Br(),
-            html.Label(['Region:'], style={'font-weight': 'bold'}),
-            dcc.RadioItems(
-                id='yradioitem',
-                options=[
-                 
-                    {'label': 'north', 'value':'north'},
-                    {'label': 'south', 'value':'south'},
-                    {'label': 'east', 'value':'east'},
-                    {'label': 'west', 'value':'west'},
-
-                ],
-                # value = 'north',
-                style={"width":"50%"}
-
-            ),
-
-        ]),
-
-        dcc.Graph(
-        id='example-graph',
-        # figure=fig
+# create the visualization
+    def generate_figure(chart_data):
+        line_chart = px.line(chart_data, x="date", y="sales", title="Pink Morsel Sales")
+        line_chart.update_layout(
+        plot_bgcolor=colors["secondary"],
+        paper_bgcolor=colors["primary"],
+        font_color=colors["font"]
         )
-    ])
+        return line_chart
 
+
+    visualization = dcc.Graph(
+        id="visualization",
+        figure=generate_figure(df2)
+        )
+
+# create the header
+    header = html.H1(
+        "Pink Morsel Visualizer",
+         id="header",
+         style={
+                "background-color": colors["secondary"],
+                "color": colors["font"],
+                "border-radius": "20px"
+                }
+            )
+
+# region picker
+    region_picker = dcc.RadioItems(
+        ["north", "east", "south", "west", "all"],
+        "north",
+        id="region_picker",
+        inline=True
+        )
+    region_picker_wrapper = html.Div(
+        [
+            region_picker
+            ],
+        style={
+            "font-size": "150%"
+            }
+        )
+
+
+# define the region picker callback
     @app.callback(
-        Output(component_id = 'example-graph', component_property='figure'),
-        [Input(component_id= 'xradioitem', component_property='value'),
-         Input(component_id= 'yradioitem', component_property='value')]
+        Output(visualization, "figure"),
+        Input(region_picker, "value")
         )
+    def update_graph(region):
+    # filter the dataset
+        if region == "all":
+            trimmed_data = df2
+        else:
+            trimmed_data = df2[df2["region"] == region]
 
-    def update_graph(x_axis, y_axis):
-        dff=df2
-        barchart = px.bar(
-            data_frame=dff,
-            x=dff['date'],
-            y=dff['sales'],
-            color='region',
-        )
-        return barchart
+    # generate a new line chart with the filtered data
+        figure = generate_figure(trimmed_data)
+        return figure
+
+
+# define the app layout
+    app.layout = html.Div(
+        [
+        header,
+        visualization,
+        region_picker_wrapper
+        ],
+    style={
+        "textAlign": "center",
+        "background-color": colors["primary"],
+        "border-radius": "20px"
+    }
+)
     
 
     app.run_server(debug=True)
